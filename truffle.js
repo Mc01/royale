@@ -1,6 +1,8 @@
 const HDWalletProvider = require('truffle-hdwallet-provider');
+const DotEnv = require('dotenv');
 
-var mnemonic = '';
+DotEnv.config();
+const mnemonic = process.env.MNEMONIC;
 
 const kovanUrl = 'https://kovan.infura.io/fG2dpoLdhYxKtzRwAmOR';
 const mainnetUrl = 'https://mainnet.infura.io/fG2dpoLdhYxKtzRwAmOR';
