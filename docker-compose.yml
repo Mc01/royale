@@ -1,0 +1,7 @@
+version: '3'
+services:
+  testrpc:
+    build: .
+    command: 'testrpc -a 1000'
+    ports:
+      - '8545:8545'

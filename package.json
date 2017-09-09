@@ -1,0 +1,22 @@
+{
+  "name": "royale",
+  "version": "1.0.0",
+  "description": "",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "truffle": "^3.4.9",
+    "truffle-hdwallet-provider": "0.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "compile": "truffle compile",
+    "migrate": "truffle migrate --network testnet",
+    "migrate-kovan": "truffle migrate --network kovan",
+    "migrate-mainnet": "truffle migrate --network mainnet",
+    "test": "truffle test --network testnet"
+  },
+  "author": "",
+  "license": "ISC"
+}
