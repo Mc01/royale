@@ -6,9 +6,20 @@ contract('Game', (accounts) => {
   const basicFee = 1;
   const gameDelay = 1;
 
+  const stateFunding = 0;
+  const statePlaying = 1;
+  const stateFinished = 2;
+
   beforeEach(async () => {
     game = await Game.new(noPlayers, noGames, basicFee, gameDelay);
   })
+
+  async function throws(fn, ...args) {
+    thrown = false;
+    try { await fn(...args); }
+    catch (err) { thrown = true; }
+    return thrown;
+  }
 
   it('test new game', async () => {
     assert.equal(
@@ -30,5 +41,28 @@ contract('Game', (accounts) => {
       await game.gameDelay(), gameDelay,
       'Delay should match'
     );
+
+    assert.equal(
+      await game.currentState(), stateFunding,
+      'State should be Funding'
+    );
+  })
+
+  it('test states', async () => {
+    await game.fund();
+
+    assert.equal(
+      await game.currentState(), statePlaying,
+      'State should be Playing'
+    );
+
+    await game.play();
+
+    assert.equal(
+      await game.currentState(), stateFinished,
+      'State should be Finished'
+    );
+
+    await game.kill();
   })
 })
