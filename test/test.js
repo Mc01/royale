@@ -1,7 +1,11 @@
 const Game = artifacts.require('Game.sol');
 
 contract('Game', (accounts) => {
-  const noPlayers = 1000;
+  let game;
+
+  const finney = 10**15;
+
+  const noPlayers = 100;
   const noGames = 30;
   const basicFee = 1;
   const gameDelay = 1;
@@ -15,7 +19,8 @@ contract('Game', (accounts) => {
   const stateFinished = 2;
 
   beforeEach(async () => {
-    game = await Game.new(noPlayers, noGames, basicFee, gameDelay);
+    game = await Game.new();
+    await game.init(noPlayers, noGames, basicFee, gameDelay);
   })
 
   async function throws(fn, ...args) {
@@ -23,6 +28,15 @@ contract('Game', (accounts) => {
     try { await fn(...args); }
     catch (err) { thrown = true; }
     return thrown;
+  }
+
+  async function fund() {
+    let i = 0;
+    for (account of accounts) {
+      await game.fund({ value: entryFee * finney, from: account })
+      i += 1;
+      if (i >= noPlayers) { break; }
+    }
   }
 
   it('test new game', async () => {
@@ -57,7 +71,7 @@ contract('Game', (accounts) => {
       await game.entryFee.call(), entryFee,
       'Entry fee should match'
     );
-  
+
     assert.equal(
       await game.fundingGoal.call(), fundingGoal,
       'Funding goal should match'
@@ -69,21 +83,12 @@ contract('Game', (accounts) => {
     );
   })
 
-  it('test states', async () => {
-    await game.fund();
+  it('test funding', async () => {
+    await fund();
 
     assert.equal(
       await game.currentState.call(), statePlaying,
       'State should be Playing'
     );
-
-    await game.play();
-
-    assert.equal(
-      await game.currentState.call(), stateFinished,
-      'State should be Finished'
-    );
-
-    await game.kill();
   })
 })

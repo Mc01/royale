@@ -19,9 +19,13 @@ contract Game {
   address provider = 0x0;
   address public leader;
 
+  address[] public playerList;
+  mapping (address => uint256) players;
+  uint256 fundsRaised;
+
   modifier onlyInState(State state) { require(currentState == state); _; }
 
-  function Game(
+  function init(
     uint256 _noPlayers,
     uint256 _noGames,
     uint256 _basicFee,
@@ -45,8 +49,19 @@ contract Game {
     currentState = State.Funding;
   }
 
-  function fund() onlyInState(State.Funding) {
-    currentState = State.Playing;
+  function fund() onlyInState(State.Funding) payable {
+    require(msg.value == entryFee * feeMultiplier);
+    /*require(msg.sender != leader);*/ // disabled for local
+    require(players[msg.sender] == 0);
+
+    players[msg.sender] = msg.value;
+    playerList.push(msg.sender);
+    fundsRaised += msg.value;
+
+
+    if (fundsRaised >= fundingGoal * feeMultiplier) {
+      currentState = State.Playing;
+    }
   }
 
   function play() onlyInState(State.Playing) {
