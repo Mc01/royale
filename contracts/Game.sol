@@ -58,7 +58,6 @@ contract Game {
     playerList.push(msg.sender);
     fundsRaised += msg.value;
 
-
     if (fundsRaised >= fundingGoal * feeMultiplier) {
       currentState = State.Playing;
     }
