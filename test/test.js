@@ -6,6 +6,10 @@ contract('Game', (accounts) => {
   const basicFee = 1;
   const gameDelay = 1;
 
+  const entryFee = (noGames + 2) * basicFee;
+  const fundingGoal = noPlayers * entryFee;
+  const gameReward = noPlayers * basicFee;
+
   const stateFunding = 0;
   const statePlaying = 1;
   const stateFinished = 2;
@@ -23,28 +27,45 @@ contract('Game', (accounts) => {
 
   it('test new game', async () => {
     assert.equal(
-      await game.noPlayers(), noPlayers,
-      'Players should match'
+      await game.noPlayers.call(), noPlayers,
+      'No players should match'
     );
 
     assert.equal(
-      await game.noGames(), noGames,
-      'Games should match'
+      await game.noGames.call(), noGames,
+      'No games should match'
     );
 
     assert.equal(
-      await game.basicFee(), basicFee,
-      'Fee should match'
+      await game.basicFee.call(), basicFee,
+      'Basic fee should match'
     );
 
     assert.equal(
-      await game.gameDelay(), gameDelay,
-      'Delay should match'
+      await game.gameDelay.call(), gameDelay,
+      'Game delay should match'
     );
 
     assert.equal(
-      await game.currentState(), stateFunding,
+      await game.currentState.call(), stateFunding,
       'State should be Funding'
+    );
+  })
+
+  it('test calculated params', async () => {
+    assert.equal(
+      await game.entryFee.call(), entryFee,
+      'Entry fee should match'
+    );
+  
+    assert.equal(
+      await game.fundingGoal.call(), fundingGoal,
+      'Funding goal should match'
+    );
+
+    assert.equal(
+      await game.gameReward.call(), gameReward,
+      'Game reward should match'
     );
   })
 
@@ -52,14 +73,14 @@ contract('Game', (accounts) => {
     await game.fund();
 
     assert.equal(
-      await game.currentState(), statePlaying,
+      await game.currentState.call(), statePlaying,
       'State should be Playing'
     );
 
     await game.play();
 
     assert.equal(
-      await game.currentState(), stateFinished,
+      await game.currentState.call(), stateFinished,
       'State should be Finished'
     );
 
