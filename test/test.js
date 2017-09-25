@@ -33,9 +33,15 @@ contract('Game', (accounts) => {
   async function fund() {
     let i = 0;
     for (account of accounts) {
-      await game.fund({ value: entryFee * finney, from: account })
+      await game.fund({ value: entryFee * finney, from: account });
       i += 1;
       if (i >= noPlayers) { break; }
+    }
+  }
+
+  async function play() {
+    for (let i = 0; i < noGames; i++) {
+      await game.play();
     }
   }
 
@@ -83,12 +89,29 @@ contract('Game', (accounts) => {
     );
   })
 
-  it('test funding', async () => {
-    await fund();
+  it('test funding and playing', async () => {
+    let initialAccount = parseInt(await web3.eth.getBalance(testAccount));
+    let initialContract = parseInt(await web3.eth.getBalance(game.address));
 
+    await fund();
     assert.equal(
       await game.currentState.call(), statePlaying,
       'State should be Playing'
+    );
+    let fundAccount = parseInt(await web3.eth.getBalance(testAccount));
+    let fundContract = parseInt(await web3.eth.getBalance(game.address));
+
+    await play();
+    assert.equal(
+      await game.currentState.call(), stateFinished,
+      'State should be Finished'
+    );
+    let playedAccount = parseInt(await web3.eth.getBalance(testAccount));
+    let playedContract = parseInt(await web3.eth.getBalance(game.address));
+
+    assert.isOk(
+      initialContract < playedContract && playedContract < fundContract &&
+      fundAccount < initialAccount && initialAccount < playedAccount
     );
   })
 })

@@ -19,9 +19,15 @@ contract Game {
   address provider = 0x0;
   address public leader;
 
-  address[] public playerList;
-  mapping (address => uint256) players;
   uint256 fundsRaised;
+  uint256 currentGame;
+
+  address[] public playerList;
+  mapping (address => uint256) public players;
+  address[] public winnerList;
+  mapping (address => bool) public winners;
+
+  event FailedWin(address winner);
 
   modifier onlyInState(State state) { require(currentState == state); _; }
 
@@ -63,11 +69,40 @@ contract Game {
     }
   }
 
+  function _getRandomNumber() private returns (uint256) {
+    return 4;
+  }
+
+  function _validateWinner(uint256 winner) private returns (uint256) {
+    if (winners[playerList[winner]]) {
+      for (uint256 i; i < noGames; i++) {
+        winner++;
+        if (winner >= noPlayers) { winner = 0; } // Reset to zero
+        if (!winners[playerList[winner]]) { break; }
+      }
+    }
+
+    address player = playerList[winner];
+    winners[player] = true;
+    winnerList.push(player);
+    return winner;
+  }
+
   function play() onlyInState(State.Playing) {
-    currentState = State.Finished;
+    uint256 winner = _getRandomNumber();
+    winner = _validateWinner(winner);
+
+    address player = playerList[winner];
+    if (!player.send(gameReward * feeMultiplier)) { FailedWin(player); }
+
+    currentGame++;
+    if (currentGame >= noGames) {
+      currentState = State.Finished;
+    }
   }
 
   function kill() onlyInState(State.Finished) {
+    if (!leader.send(gameReward * feeMultiplier)) { FailedWin(leader); }
     selfdestruct(provider);
   }
 }
