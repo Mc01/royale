@@ -4,6 +4,7 @@ contract('Game', (accounts) => {
   let game;
 
   const finney = 10**15;
+  const testAccount = accounts[5];
 
   const noPlayers = 100;
   const noGames = 30;
