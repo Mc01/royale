@@ -33,10 +33,13 @@ contract('Game', (accounts) => {
 
   async function fund() {
     let i = 0;
+    let leader = await game.leader.call();
     for (account of accounts) {
-      await game.fund({ value: entryFee * finney, from: account });
-      i += 1;
-      if (i >= noPlayers) { break; }
+      if (account != leader) {
+        await game.fund({ value: entryFee * finney, from: account });
+        i += 1;
+        if (i >= noPlayers) { break; }
+      }
     }
   }
 
@@ -96,7 +99,7 @@ contract('Game', (accounts) => {
 
   // Workflow test
 
-  it('test funding and playing', async () => {
+  it('test workflow', async () => {
     let initialAccount = parseInt(await web3.eth.getBalance(testAccount));
     let initialContract = parseInt(await web3.eth.getBalance(game.address));
 
@@ -120,5 +123,7 @@ contract('Game', (accounts) => {
       initialContract < playedContract && playedContract < fundContract &&
       fundAccount < initialAccount && initialAccount < playedAccount
     );
+
+    await game.kill();
   })
 })
