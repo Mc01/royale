@@ -45,6 +45,8 @@ contract('Game', (accounts) => {
     }
   }
 
+  // New game test
+
   it('test new game', async () => {
     assert.equal(
       await game.noPlayers.call(), noPlayers,
@@ -72,6 +74,8 @@ contract('Game', (accounts) => {
     );
   })
 
+  // Computation test
+
   it('test calculated params', async () => {
     assert.equal(
       await game.entryFee.call(), entryFee,
@@ -88,6 +92,8 @@ contract('Game', (accounts) => {
       'Game reward should match'
     );
   })
+
+  // Workflow test
 
   it('test funding and playing', async () => {
     let initialAccount = parseInt(await web3.eth.getBalance(testAccount));
