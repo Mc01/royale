@@ -4,6 +4,7 @@ contract('Game', (accounts) => {
   let game;
 
   const finney = 10**15;
+  const testAccount = accounts[5];
 
   const noPlayers = 100;
   const noGames = 30;
@@ -32,12 +33,23 @@ contract('Game', (accounts) => {
 
   async function fund() {
     let i = 0;
+    let leader = await game.leader.call();
     for (account of accounts) {
-      await game.fund({ value: entryFee * finney, from: account })
-      i += 1;
-      if (i >= noPlayers) { break; }
+      if (account != leader) {
+        await game.fund({ value: entryFee * finney, from: account });
+        i += 1;
+        if (i >= noPlayers) { break; }
+      }
     }
   }
+
+  async function play() {
+    for (let i = 0; i < noGames; i++) {
+      await game.play();
+    }
+  }
+
+  // New game test
 
   it('test new game', async () => {
     assert.equal(
@@ -66,6 +78,8 @@ contract('Game', (accounts) => {
     );
   })
 
+  // Computation test
+
   it('test calculated params', async () => {
     assert.equal(
       await game.entryFee.call(), entryFee,
@@ -83,12 +97,33 @@ contract('Game', (accounts) => {
     );
   })
 
-  it('test funding', async () => {
-    await fund();
+  // Workflow test
 
+  it('test workflow', async () => {
+    let initialAccount = parseInt(await web3.eth.getBalance(testAccount));
+    let initialContract = parseInt(await web3.eth.getBalance(game.address));
+
+    await fund();
     assert.equal(
       await game.currentState.call(), statePlaying,
       'State should be Playing'
     );
+    let fundAccount = parseInt(await web3.eth.getBalance(testAccount));
+    let fundContract = parseInt(await web3.eth.getBalance(game.address));
+
+    await play();
+    assert.equal(
+      await game.currentState.call(), stateFinished,
+      'State should be Finished'
+    );
+    let playedAccount = parseInt(await web3.eth.getBalance(testAccount));
+    let playedContract = parseInt(await web3.eth.getBalance(game.address));
+
+    assert.isOk(
+      initialContract < playedContract && playedContract < fundContract &&
+      fundAccount < initialAccount && initialAccount < playedAccount
+    );
+
+    await game.kill();
   })
 })
