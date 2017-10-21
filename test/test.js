@@ -1,13 +1,18 @@
+const sha256 = require('js-sha256').sha256;
+const BigNumber = require('bignumber.js');
+
 const Game = artifacts.require('Game.sol');
 
 contract('Game', (accounts) => {
   let game;
 
   const finney = 10**15;
-  const testAccount = accounts[5];
+
+  const noGames = 3;
+  const sources = Array(noGames).fill().map(() => `${Math.random()}`);
+  const secrets = sources.map(s => new BigNumber(`0x${sha256(s)}`));
 
   const noPlayers = 100;
-  const noGames = 30;
   const basicFee = 1;
   const gameDelay = 1;
 
@@ -21,7 +26,7 @@ contract('Game', (accounts) => {
 
   beforeEach(async () => {
     game = await Game.new();
-    await game.init(noPlayers, noGames, basicFee, gameDelay);
+    await game.init(noPlayers, noGames, basicFee, gameDelay, secrets);
   })
 
   async function throws(fn, ...args) {
@@ -45,7 +50,7 @@ contract('Game', (accounts) => {
 
   async function play() {
     for (let i = 0; i < noGames; i++) {
-      await game.play();
+      await game.play(sources[i]);
     }
   }
 
@@ -100,29 +105,30 @@ contract('Game', (accounts) => {
   // Workflow test
 
   it('test workflow', async () => {
-    let initialAccount = parseInt(await web3.eth.getBalance(testAccount));
     let initialContract = parseInt(await web3.eth.getBalance(game.address));
 
     await fund();
     assert.equal(
-      await game.currentState.call(), statePlaying,
+      parseInt(await game.currentState.call()), statePlaying,
       'State should be Playing'
     );
-    let fundAccount = parseInt(await web3.eth.getBalance(testAccount));
     let fundContract = parseInt(await web3.eth.getBalance(game.address));
 
     await play();
     assert.equal(
-      await game.currentState.call(), stateFinished,
+      parseInt(await game.currentState.call()), stateFinished,
       'State should be Finished'
     );
-    let playedAccount = parseInt(await web3.eth.getBalance(testAccount));
     let playedContract = parseInt(await web3.eth.getBalance(game.address));
 
     assert.isOk(
-      initialContract < playedContract && playedContract < fundContract &&
-      fundAccount < initialAccount && initialAccount < playedAccount
+      initialContract < playedContract && playedContract < fundContract
     );
+
+    let balances = [];
+    for (let i = 0; i < noPlayers; i++) {
+      balances.push(parseInt(await web3.eth.getBalance(accounts[i])));
+    }
 
     await game.kill();
   })
